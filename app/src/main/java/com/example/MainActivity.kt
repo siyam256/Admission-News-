@@ -1,6 +1,9 @@
 package com.example
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
+import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.ComponentActivity
@@ -58,6 +61,20 @@ fun WebContent(url: String, modifier: Modifier = Modifier) {
             super.doUpdateVisitedHistory(view, url, isReload)
             // Trigger state change so that BackHandler can update its enabled status
             webView = view
+          }
+
+          override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
+            val requestUrl = request?.url?.toString() ?: return false
+            if (requestUrl.isNotEmpty()) {
+              try {
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(requestUrl))
+                view?.context?.startActivity(intent)
+                return true
+              } catch (e: Exception) {
+                e.printStackTrace()
+              }
+            }
+            return false
           }
         }
         loadUrl(url)
