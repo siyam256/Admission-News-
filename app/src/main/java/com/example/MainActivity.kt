@@ -444,19 +444,25 @@ fun WebContent(
                     override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
                         val requestUrl = request?.url?.toString() ?: return false
                         if (requestUrl.isNotEmpty()) {
-                            // If loading initial home URL, load it internally inside WebView. 
-                            // Otherwise, open standard clicked navigation links in default phone browser.
-                            val isHomeUrl = requestUrl == url || 
-                                            requestUrl == "$url/" || 
-                                            requestUrl == "${url}index.html" || 
-                                            requestUrl == "${url}index.php"
-                            if (isHomeUrl) {
-                                return false // Let it load internally in WebView
+                            val uri = Uri.parse(requestUrl)
+                            val host = uri.host
+                            val baseUri = Uri.parse(url)
+                            val baseHost = baseUri.host
+
+                            // Match the base host or subdomains to keep the navigation inside the app
+                            val isInternal = host == null || 
+                                             baseHost == null || 
+                                             host == baseHost || 
+                                             host.endsWith(".$baseHost") || 
+                                             baseHost.endsWith(".$host")
+
+                            if (isInternal) {
+                                return false
                             }
                             try {
-                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(requestUrl))
+                                val intent = Intent(Intent.ACTION_VIEW, uri)
                                 view?.context?.startActivity(intent)
-                                return true // Intercept successfully and launch external deep link
+                                return true
                             } catch (e: Exception) {
                                 e.printStackTrace()
                             }
