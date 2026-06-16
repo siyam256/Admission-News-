@@ -14,6 +14,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
     - name: Decode Debug Keystore
       run: |
         if [ -f "debug.keystore.base64" ]; then
@@ -32,16 +37,9 @@ jobs:
         # Turn off caching and configuration-cache in gradle.properties specifically for CI
         sed -i 's/org.gradle.caching=true/org.gradle.caching=false/g' gradle.properties
         sed -i 's/org.gradle.configuration-cache=true/org.gradle.configuration-cache=false/g' gradle.properties
-        # Reduce JVM heap memory dynamically to avoid OOM crash on GitHub runner (7GB limit)
-        sed -i 's/-Xmx4g/-Xmx2g/g' gradle.properties
         # Display memory and file properties
         free -h
         cat gradle.properties
-    - name: Set up JDK 21
-      uses: actions/setup-java@v4
-      with:
-        java-version: '21'
-        distribution: 'temurin'
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v4
       with:
