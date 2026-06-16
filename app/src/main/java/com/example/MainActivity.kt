@@ -17,7 +17,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -30,10 +30,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -120,13 +118,19 @@ fun SplashScreen(isOnline: Boolean, onTimeout: (Boolean) -> Unit) {
         initialValue = 0.94f,
         targetValue = 1.04f,
         animationSpec = infiniteRepeatable(
-            animation = tween(1250, easing = FastOutSlowInEasing),
+            animation = tween(1200, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
         ),
         label = "pulseScale"
     )
 
+    val fadeAlpha = remember { Animatable(0f) }
+
     LaunchedEffect(Unit) {
+        fadeAlpha.animateTo(
+            targetValue = 1f,
+            animationSpec = tween(800, easing = LinearOutSlowInEasing)
+        )
         delay(2200) // Stay on splash to showcase branding/logo beautifully
         onTimeout(isOnline)
     }
@@ -134,27 +138,76 @@ fun SplashScreen(isOnline: Boolean, onTimeout: (Boolean) -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        Color(0xFF0F172A), // Slated Dark Blue
-                        Color(0xFF1E293B)
-                    )
-                )
-            ),
+            .background(Color(0xFF0F172A)), // Match Launcher Background color exactly
         contentAlignment = Alignment.Center
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
-            modifier = Modifier.padding(24.dp)
+            modifier = Modifier
+                .padding(24.dp)
+                .graphicsLayer {
+                    alpha = fadeAlpha.value
+                }
         ) {
-            CalendarLogo(scale = pulseScale)
+            // Elegant Card wrapping the logo
+            Card(
+                modifier = Modifier
+                    .size(150.dp)
+                    .graphicsLayer {
+                        scaleX = pulseScale
+                        scaleY = pulseScale
+                    },
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(32.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color(0xFF1E293B)
+                ),
+                elevation = CardDefaults.cardElevation(
+                    defaultElevation = 8.dp
+                )
+            ) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.logo),
+                        contentDescription = "Admission Calendar Logo",
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp)
+                    )
+                }
+            }
             
+            Spacer(modifier = Modifier.height(36.dp))
+            
+            Text(
+                text = "Admission Calendar",
+                style = androidx.compose.ui.text.TextStyle(
+                    color = Color.White,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = (-0.5).sp
+                )
+            )
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            Text(
+                text = "সব বিশ্ববিদ্যালয় ও কলেজের আপডেট এক জায়গায়",
+                style = androidx.compose.ui.text.TextStyle(
+                    color = Color(0xFF94A3B8),
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium,
+                    letterSpacing = 0.1.sp
+                )
+            )
+
             Spacer(modifier = Modifier.height(48.dp))
             
             CircularProgressIndicator(
-                color = Color(0xFF3B82F6), // Royal accents
+                color = Color(0xFF1D4ED8), // Royal accent
                 strokeWidth = 3.5.dp,
                 modifier = Modifier.size(36.dp)
             )
@@ -162,140 +215,14 @@ fun SplashScreen(isOnline: Boolean, onTimeout: (Boolean) -> Unit) {
             Spacer(modifier = Modifier.height(18.dp))
             
             Text(
-                text = "Loading Admission Updates...",
+                text = "Loading updates...",
                 style = androidx.compose.ui.text.TextStyle(
-                    color = Color(0xFF94A3B8),
-                    fontSize = 14.sp,
+                    color = Color(0xFF475569),
+                    fontSize = 13.sp,
                     fontWeight = FontWeight.Medium,
                     letterSpacing = 0.5.sp
                 )
             )
-        }
-    }
-}
-
-@Composable
-fun BinderRing() {
-    Box(
-        modifier = Modifier
-            .size(16.dp, 42.dp)
-            .background(
-                color = Color(0xFFF1F5F9),
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
-            )
-            .border(
-                width = 2.5.dp,
-                color = Color(0xFF0F172A),
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
-            )
-    )
-}
-
-@Composable
-fun CalendarLogo(
-    modifier: Modifier = Modifier,
-    scale: Float = 1f
-) {
-    Box(
-        modifier = modifier
-            .width(235.dp)
-            .height(255.dp),
-        contentAlignment = Alignment.BottomCenter
-    ) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(225.dp)
-                .graphicsLayer {
-                    scaleX = scale
-                    scaleY = scale
-                },
-            shape = androidx.compose.foundation.shape.RoundedCornerShape(26.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = Color.White
-            ),
-            elevation = CardDefaults.cardElevation(
-                defaultElevation = 10.dp
-            )
-        ) {
-            Column(modifier = Modifier.fillMaxSize()) {
-                // Dark Blue Top Header
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(0.26f)
-                        .background(Color(0xFF0F172A))
-                )
-
-                // Branding Text Area
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(0.74f)
-                        .padding(horizontal = 20.dp, vertical = 14.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Text(
-                        text = "Admission",
-                        style = androidx.compose.ui.text.TextStyle(
-                            color = Color(0xFF0F172A),
-                            fontSize = 28.sp,
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = (-0.5).sp
-                        )
-                    )
-                    
-                    Spacer(modifier = Modifier.height(2.dp))
-                    
-                    Text(
-                        text = "Calendar",
-                        style = androidx.compose.ui.text.TextStyle(
-                            color = Color(0xFF1D4ED8),
-                            fontSize = 32.sp,
-                            fontWeight = FontWeight.Black,
-                            letterSpacing = (-0.5).sp
-                        )
-                    )
-                    
-                    Spacer(modifier = Modifier.height(6.dp))
-                    
-                    // Artistic customizable stroke underline
-                    Canvas(
-                        modifier = Modifier
-                            .width(140.dp)
-                            .height(8.dp)
-                    ) {
-                        val path = Path().apply {
-                            moveTo(2.dp.toPx(), 2.dp.toPx())
-                            quadraticTo(
-                                size.width / 2, size.height + 3.dp.toPx(),
-                                size.width - 2.dp.toPx(), 3.dp.toPx()
-                            )
-                        }
-                        drawPath(
-                            path = path,
-                            color = Color(0xFF1D4ED8),
-                            style = Stroke(
-                                width = 3.5.dp.toPx(),
-                                cap = StrokeCap.Round
-                            )
-                        )
-                    }
-                }
-            }
-        }
-
-        // Overlapping Binder Rings
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.TopCenter)
-                .padding(horizontal = 42.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            BinderRing()
-            BinderRing()
         }
     }
 }
@@ -413,7 +340,7 @@ fun OfflineScreen(onRetry: () -> Unit) {
                                 imageVector = Icons.Default.Refresh,
                                 contentDescription = "Refresh icon",
                                 modifier = Modifier.size(18.dp)
-                            )
+                              )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 text = "পুনরায় চেষ্টা করুন (Retry)",
@@ -538,10 +465,19 @@ fun WebContent(
                     override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
                         val requestUrl = request?.url?.toString() ?: return false
                         if (requestUrl.isNotEmpty()) {
+                            // If loading initial home URL, load it internally inside WebView. 
+                            // Otherwise, open standard clicked navigation links in default phone browser.
+                            val isHomeUrl = requestUrl == url || 
+                                            requestUrl == "$url/" || 
+                                            requestUrl == "${url}index.html" || 
+                                            requestUrl == "${url}index.php"
+                            if (isHomeUrl) {
+                                return false // Let it load internally in WebView
+                            }
                             try {
                                 val intent = Intent(Intent.ACTION_VIEW, Uri.parse(requestUrl))
                                 view?.context?.startActivity(intent)
-                                return true
+                                return true // Intercept successfully and launch external deep link
                             } catch (e: Exception) {
                                 e.printStackTrace()
                             }
