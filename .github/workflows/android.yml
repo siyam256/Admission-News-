@@ -18,6 +18,11 @@ jobs:
       run: |
         if [ -f "debug.keystore.base64" ]; then
           base64 -d debug.keystore.base64 > debug.keystore || base64 --decode debug.keystore.base64 > debug.keystore
+          # Verify keystore integrity; if corrupt or invalid, delete it so Gradle auto-generates a pristine one
+          if ! keytool -list -keystore debug.keystore -storepass android > /dev/null 2>&1; then
+            echo "Decoded debug.keystore is invalid or corrupt. Deleting to let Gradle auto-generate a valid one."
+            rm -f debug.keystore
+          fi
         fi
     - name: Prepare Secrets Configuration
       run: |
