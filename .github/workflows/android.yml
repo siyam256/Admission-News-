@@ -58,6 +58,7 @@ jobs:
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v4
       with:
+        gradle-version: 9.3.1
         cache-disabled: true
         validate-wrappers: false
     - name: Accept Android SDK Licenses
@@ -65,8 +66,7 @@ jobs:
         yes | "$ANDROID_HOME"/cmdline-tools/latest/bin/sdkmanager --licenses || true
     - name: Build with Gradle
       run: |
-        chmod +x gradlew
-        ./gradlew clean :app:assembleDebug --no-build-cache --no-configuration-cache --stacktrace
+        gradle clean :app:assembleDebug --no-build-cache --no-configuration-cache --stacktrace
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
