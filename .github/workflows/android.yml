@@ -38,6 +38,9 @@ jobs:
         gradle-version: 9.3.1
         cache-disabled: true
         validate-wrappers: false
+    - name: Accept Android SDK Licenses
+      run: |
+        yes | "$ANDROID_HOME"/cmdline-tools/latest/bin/sdkmanager --licenses || true
     - name: Generate Pristine Gradle Wrapper
       run: |
         gradle wrapper --gradle-version 9.3.1
