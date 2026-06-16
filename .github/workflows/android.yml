@@ -37,7 +37,7 @@ jobs:
       with:
         gradle-version: 9.3.1
         cache-disabled: true
-        validate-wrappers: false
+        wrapper-validation-enabled: false
     - name: Regenerate Pristine Gradle Wrapper
       run: |
         gradle wrapper --gradle-version 9.3.1
