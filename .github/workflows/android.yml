@@ -19,15 +19,28 @@ jobs:
       with:
         java-version: '21'
         distribution: 'temurin'
-    - name: Decode Debug Keystore
+    - name: Decode or Generate Debug Keystore
       run: |
-        if [ -f "debug.keystore.base64" ]; then
+        if [ -f "debug.keystore.base64" ] && [ -s "debug.keystore.base64" ]; then
+          echo "Decoding debug.keystore.base64..."
           base64 -d debug.keystore.base64 > debug.keystore || base64 --decode debug.keystore.base64 > debug.keystore
-          # Verify keystore integrity; if corrupt or invalid, delete it so Gradle auto-generates a pristine one
-          if ! keytool -list -keystore debug.keystore -storepass android > /dev/null 2>&1; then
-            echo "Decoded debug.keystore is invalid or corrupt. Deleting to let Gradle auto-generate a valid one."
-            rm -f debug.keystore
-          fi
+        fi
+        
+        # Verify keystore integrity; if corrupt, missing, or invalid, generate a pristine one on-the-fly
+        if [ ! -f "debug.keystore" ] || ! keytool -list -keystore debug.keystore -storepass android > /dev/null 2>&1; then
+          echo "debug.keystore is missing, corrupt, or invalid. Generating a pristine debug keystore on-the-fly..."
+          rm -f debug.keystore
+          keytool -genkeypair -v \
+            -keystore debug.keystore \
+            -alias androiddebugkey \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -storepass android \
+            -keypass android \
+            -dname "CN=Android Debug,O=Android,C=US"
+        else
+          echo "debug.keystore is valid."
         fi
     - name: Prepare Secrets Configuration
       run: |
@@ -37,24 +50,23 @@ jobs:
         # Turn off caching and configuration-cache in gradle.properties specifically for CI
         sed -i 's/org.gradle.caching=true/org.gradle.caching=false/g' gradle.properties
         sed -i 's/org.gradle.configuration-cache=true/org.gradle.configuration-cache=false/g' gradle.properties
+        # Reduce JVM heap size to avoid runner memory exhaustion (OOM) on GitHub Actions CI
+        sed -i 's/-Xmx4g/-Xmx3g/g' gradle.properties
         # Display memory and file properties
         free -h
         cat gradle.properties
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v4
       with:
-        gradle-version: 9.3.1
         cache-disabled: true
         validate-wrappers: false
     - name: Accept Android SDK Licenses
       run: |
         yes | "$ANDROID_HOME"/cmdline-tools/latest/bin/sdkmanager --licenses || true
-    - name: Generate Pristine Gradle Wrapper
-      run: |
-        gradle wrapper --gradle-version 9.3.1
-        chmod +x gradlew
     - name: Build with Gradle
-      run: ./gradlew clean :app:assembleDebug --no-build-cache --no-configuration-cache --stacktrace
+      run: |
+        chmod +x gradlew
+        ./gradlew clean :app:assembleDebug --no-build-cache --no-configuration-cache --stacktrace
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
