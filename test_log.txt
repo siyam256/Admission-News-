@@ -1,0 +1,5 @@
+=== Search on admission-calendar.com ===
+Trying URL: https://admission-calendar.com/logo.jpg
+HEAD https://admission-calendar.com/logo.jpg -> 200
+FOUND!!! SUCCESSFULLY DOWNLOADED logo from https://admission-calendar.com/logo.jpg and saved to /app/applet/app/src/main/res/drawable/logo.jpg!
+TEST PASSED SUCCESSFULLY

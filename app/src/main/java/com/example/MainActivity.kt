@@ -180,48 +180,12 @@ fun SplashScreen(isOnline: Boolean, onTimeout: (Boolean) -> Unit) {
                 }
             }
             
-            Spacer(modifier = Modifier.height(36.dp))
-            
-            Text(
-                text = "Admission Calendar",
-                style = androidx.compose.ui.text.TextStyle(
-                    color = Color.White,
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = (-0.5).sp
-                )
-            )
-
-            Spacer(modifier = Modifier.height(6.dp))
-
-            Text(
-                text = "সব বিশ্ববিদ্যালয় ও কলেজের আপডেট এক জায়গায়",
-                style = androidx.compose.ui.text.TextStyle(
-                    color = Color(0xFF94A3B8),
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Medium,
-                    letterSpacing = 0.1.sp
-                )
-            )
-
             Spacer(modifier = Modifier.height(48.dp))
             
             CircularProgressIndicator(
                 color = Color(0xFF1D4ED8), // Royal accent
                 strokeWidth = 3.5.dp,
                 modifier = Modifier.size(36.dp)
-            )
-            
-            Spacer(modifier = Modifier.height(18.dp))
-            
-            Text(
-                text = "Loading updates...",
-                style = androidx.compose.ui.text.TextStyle(
-                    color = Color(0xFF475569),
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Medium,
-                    letterSpacing = 0.5.sp
-                )
             )
         }
     }
@@ -374,17 +338,20 @@ fun MainWebWrapper(
             onErrorTriggered = onErrorTriggered
         )
         
-        // Horizontal progress loader at extremely top
+        // Centered progress loader with clean overlay
         if (loadingProgress < 100) {
-            LinearProgressIndicator(
-                progress = { loadingProgress / 100f },
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.TopCenter)
-                    .height(3.5.dp),
-                color = Color(0xFF1D4ED8),
-                trackColor = Color.Transparent
-            )
+                    .fillMaxSize()
+                    .background(Color.White),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(
+                    color = Color(0xFF1D4ED8),
+                    strokeWidth = 4.dp,
+                    modifier = Modifier.size(48.dp)
+                )
+            }
         }
 
         // Animated warning overlay at the bottom when user loses connectivity but remains in main session cached
