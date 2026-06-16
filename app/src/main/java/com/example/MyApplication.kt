@@ -17,15 +17,6 @@ class MyApplication : Application() {
                 // Initialize OneSignal
                 OneSignal.initWithContext(this, appId)
                 Log.d("MyApplication", "OneSignal initialized successfully with App ID: $appId")
-                
-                // Prompt for notification permissions on startup
-                CoroutineScope(Dispatchers.Main).launch {
-                    try {
-                        OneSignal.Notifications.requestPermission(true)
-                    } catch (e: Exception) {
-                        Log.e("MyApplication", "Failed to request notification permission: ${e.message}")
-                    }
-                }
             } catch (e: Exception) {
                 Log.e("MyApplication", "Failed to initialize OneSignal: ${e.message}")
             }

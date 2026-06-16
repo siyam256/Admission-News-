@@ -63,6 +63,18 @@ fun MainAppContainer(networkMonitor: NetworkMonitor) {
         networkMonitor.isOnlineFlow
     }.collectAsState(initial = networkMonitor.isCurrentlyConnected())
 
+    // Safe runtime notification permission request for OneSignal 5.x
+    LaunchedEffect(Unit) {
+        val appId = BuildConfig.ONESIGNAL_APP_ID
+        if (appId.isNotEmpty() && appId != "YOUR_ONESIGNAL_APP_ID") {
+            try {
+                com.onesignal.OneSignal.Notifications.requestPermission(true)
+            } catch (e: Exception) {
+                android.util.Log.e("MainActivity", "Failed to request notification permission: ${e.message}")
+            }
+        }
+    }
+
     // Tracks Web loading issues explicitly
     var isWebViewError by remember { mutableStateOf(false) }
 
