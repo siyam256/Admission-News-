@@ -58,22 +58,10 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun MainAppContainer(networkMonitor: NetworkMonitor) {
-    var screenState by remember { mutableStateOf("SPLASH") }
+    var screenState by remember { mutableStateOf("MAIN") }
     val isOnline by remember {
         networkMonitor.isOnlineFlow
     }.collectAsState(initial = networkMonitor.isCurrentlyConnected())
-
-    // Safe runtime notification permission request for OneSignal 5.x
-    LaunchedEffect(Unit) {
-        val appId = BuildConfig.ONESIGNAL_APP_ID
-        if (appId.isNotEmpty() && appId != "YOUR_ONESIGNAL_APP_ID") {
-            try {
-                com.onesignal.OneSignal.Notifications.requestPermission(true)
-            } catch (e: Exception) {
-                android.util.Log.e("MainActivity", "Failed to request notification permission: ${e.message}")
-            }
-        }
-    }
 
     // Tracks Web loading issues explicitly
     var isWebViewError by remember { mutableStateOf(false) }
@@ -444,23 +432,18 @@ fun WebContent(
                     override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
                         val requestUrl = request?.url?.toString() ?: return false
                         if (requestUrl.isNotEmpty()) {
-                            val uri = Uri.parse(requestUrl)
-                            val host = uri.host
-                            val baseUri = Uri.parse(url)
-                            val baseHost = baseUri.host
-
-                            // Match the base host or subdomains to keep the navigation inside the app
-                            val isInternal = host == null || 
-                                             baseHost == null || 
-                                             host == baseHost || 
-                                             host.endsWith(".$baseHost") || 
-                                             baseHost.endsWith(".$host")
-
-                            if (isInternal) {
+                            // Let the initial home URL load in the WebView, open any other link in default browser
+                            val isHomeUrl = requestUrl == url || 
+                                            requestUrl == "$url/" || 
+                                            requestUrl == "${url}index.html" || 
+                                            requestUrl == "${url}index.php" ||
+                                            requestUrl.startsWith("https://admission-calendar.com/?")
+                            
+                            if (isHomeUrl) {
                                 return false
                             }
                             try {
-                                val intent = Intent(Intent.ACTION_VIEW, uri)
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(requestUrl))
                                 view?.context?.startActivity(intent)
                                 return true
                             } catch (e: Exception) {
