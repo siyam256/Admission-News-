@@ -145,7 +145,7 @@ fun SplashScreen(isOnline: Boolean, onTimeout: (Boolean) -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF0F172A)), // Match Launcher Background color exactly
+            .background(Color.White), // Match white background precisely as requested
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -157,42 +157,29 @@ fun SplashScreen(isOnline: Boolean, onTimeout: (Boolean) -> Unit) {
                     alpha = fadeAlpha.value
                 }
         ) {
-            // Elegant Card wrapping the logo
-            Card(
+            // Clean seamless logo display with pulse animation
+            Box(
                 modifier = Modifier
-                    .size(150.dp)
+                    .size(160.dp)
                     .graphicsLayer {
                         scaleX = pulseScale
                         scaleY = pulseScale
                     },
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(32.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = Color(0xFF1E293B)
-                ),
-                elevation = CardDefaults.cardElevation(
-                    defaultElevation = 8.dp
-                )
+                contentAlignment = Alignment.Center
             ) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.logo),
-                        contentDescription = "Admission Calendar Logo",
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(16.dp)
-                    )
-                }
+                Image(
+                    painter = painterResource(id = R.drawable.logo),
+                    contentDescription = "Admission Calendar Logo",
+                    modifier = Modifier.fillMaxSize()
+                )
             }
             
             Spacer(modifier = Modifier.height(48.dp))
             
             CircularProgressIndicator(
-                color = Color(0xFF1D4ED8), // Royal accent
-                strokeWidth = 3.5.dp,
-                modifier = Modifier.size(36.dp)
+                color = Color(0xFFEF4444), // Brand accent color
+                strokeWidth = 3.dp,
+                modifier = Modifier.size(32.dp)
             )
         }
     }
