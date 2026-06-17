@@ -58,13 +58,20 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun MainAppContainer(networkMonitor: NetworkMonitor) {
-    var screenState by remember { mutableStateOf("MAIN") }
+    var screenState by remember { mutableStateOf("SPLASH") }
     val isOnline by remember {
         networkMonitor.isOnlineFlow
     }.collectAsState(initial = networkMonitor.isCurrentlyConnected())
 
     // Tracks Web loading issues explicitly
     var isWebViewError by remember { mutableStateOf(false) }
+
+    // If connectivity drops, immediately divert to the offline screen (unless on splash)
+    LaunchedEffect(isOnline) {
+        if (!isOnline && screenState != "SPLASH") {
+            screenState = "OFFLINE"
+        }
+    }
 
     when (screenState) {
         "SPLASH" -> {
@@ -91,7 +98,7 @@ fun MainAppContainer(networkMonitor: NetworkMonitor) {
             )
         }
         "MAIN" -> {
-            if (isWebViewError) {
+            if (isWebViewError || !isOnline) {
                 LaunchedEffect(Unit) {
                     screenState = "OFFLINE"
                 }
@@ -204,71 +211,31 @@ fun OfflineScreen(onRetry: () -> Unit) {
     ) {
         Card(
             modifier = Modifier
-                .fillMaxWidth(0.88f)
+                .fillMaxWidth(0.85f)
                 .padding(16.dp),
-            shape = androidx.compose.foundation.shape.RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFFEE2E2)),
+            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFCA5A5)),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(28.dp),
+                    .padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(80.dp)
-                        .background(
-                            color = Color(0xFFFEF2F2),
-                            shape = androidx.compose.foundation.shape.CircleShape
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Warning,
-                        contentDescription = "Offline indicator icon",
-                        tint = Color(0xFFEF4444),
-                        modifier = Modifier.size(40.dp)
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
                 Text(
-                    text = "ইন্টারনেট কানেকশন নেই।",
+                    text = "ইন্টারনেট সংযোগ নেই",
                     style = androidx.compose.ui.text.TextStyle(
-                        color = Color(0xFF0F172A),
-                        fontSize = 20.sp,
+                        color = Color(0xFF991B1B),
+                        fontSize = 18.sp,
                         fontWeight = FontWeight.Bold
-                    )
+                    ),
+                    textAlign = TextAlign.Center
                 )
 
-                Spacer(modifier = Modifier.height(4.dp))
-
-                Text(
-                    text = "No Internet Connection",
-                    style = androidx.compose.ui.text.TextStyle(
-                        color = Color(0xFF64748B),
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Text(
-                    text = "নতুন আপডেট লোড করতে ইন্টারনেট অন করুন এবং আবার চেষ্টা বাটনে চাপুন।",
-                    textAlign = TextAlign.Center,
-                    style = androidx.compose.ui.text.TextStyle(
-                        color = Color(0xFF64748B),
-                        fontSize = 13.sp,
-                        lineHeight = 18.sp
-                    )
-                )
-
-                Spacer(modifier = Modifier.height(28.dp))
+                Spacer(modifier = Modifier.height(20.dp))
 
                 Button(
                     onClick = {
@@ -283,36 +250,25 @@ fun OfflineScreen(onRetry: () -> Unit) {
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(50.dp),
+                        .height(48.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF1D4ED8)
+                        containerColor = Color(0xFFEF4444)
                     ),
-                    shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(10.dp)
                 ) {
                     if (isChecking) {
                         CircularProgressIndicator(
                             color = Color.White,
                             strokeWidth = 2.dp,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(18.dp)
                         )
                     } else {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Refresh,
-                                contentDescription = "Refresh icon",
-                                modifier = Modifier.size(18.dp)
-                              )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "পুনরায় চেষ্টা করুন (Retry)",
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White
-                            )
-                        }
+                        Text(
+                            text = "পুনরায় চেষ্টা করুন",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
                     }
                 }
             }
@@ -351,45 +307,6 @@ fun MainWebWrapper(
                     strokeWidth = 4.dp,
                     modifier = Modifier.size(48.dp)
                 )
-            }
-        }
-
-        // Animated warning overlay at the bottom when user loses connectivity but remains in main session cached
-        AnimatedVisibility(
-            visible = !isOnlineState,
-            enter = fadeIn() + expandVertically(),
-            exit = fadeOut() + shrinkVertically(),
-            modifier = Modifier.align(Alignment.BottomCenter)
-        ) {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFFEF2F2)),
-                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFCA5A5)),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
-            ) {
-                Row(
-                    modifier = Modifier.padding(14.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Warning,
-                        contentDescription = "No Internet connection",
-                        tint = Color(0xFFEF4444),
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Text(
-                        text = "ইন্টারনেট নেই। অফলাইন মোডে দেখাচ্ছে।",
-                        style = androidx.compose.ui.text.TextStyle(
-                            color = Color(0xFF991B1B),
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Medium
-                        )
-                    )
-                }
             }
         }
     }
